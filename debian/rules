@@ -1,0 +1,91 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# 必要に応じて実行時に設定するパラメータ
+PF=/opt/gcc-linaro-4.7
+CURDIR=$(PWD)
+gcc_tarball := $(shell find . -maxdepth 1 -name "gcc*.tar.*" | xargs -n1 -i basename {})
+
+unpach: unpack-stamp
+
+unpack-stamp:
+	case $(gcc_tarball) in \
+	  *.tar.bz2)  tar xjf $(gcc_tarball); mv `basename $(gcc_tarball) .tar.bz2` src;; \
+	  *.tar.gz)   tar xzf $(gcc_tarball); mv `basename $(gcc_tarball) .tar.gz` src;; \
+	  *.tar.xz)   tar xJf $(gcc_tarball); mv `basename $(gcc_tarball) .tar.xz` src;; \
+	  *)     false; \
+	esac
+	touch $@
+
+configure: config-stamp
+
+config-stamp: unpack-stamp
+	dh_testdir
+	# Add here commands to configure the package.
+	mkdir -p build
+	cd build; ../src/configure \
+			--prefix=$(PF) \
+			--exec-prefix=$(PF)
+	touch $@
+
+build: build-stamp
+
+build-stamp:  config-stamp
+	dh_testdir
+	cd build; $(MAKE)
+	touch $@
+
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f unpack-stamp config-stamp build-stamp install-stamp
+	rm -rf src build debian/tmp
+	# Add here commands to clean up after the build process.
+#	-$(MAKE) distclean
+#ifneq "$(wildcard /usr/share/misc/config.sub)" ""
+#	cp -f /usr/share/misc/config.sub config.sub
+#endif
+#ifneq "$(wildcard /usr/share/misc/config.guess)" ""
+#	cp -f /usr/share/misc/config.guess config.guess
+#endif
+	dh_clean 
+
+install: install-stamp
+
+install-stamp: build-stamp
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+	# Add here commands to install the package into debian/gcc-4.7.
+	cd build; $(MAKE) prefix=$(CURDIR)/debian/tmp/$(PF) exec_prefix=$(CURDIR)/debian/tmp/$(PF) install
+	touch $@
+
+# Build architecture-independent files here.
+binary-indep: install-stamp
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: install-stamp
+	dh_testdir
+	dh_testroot
+	dh_link
+	dh_compress
+	dh_installdebconf
+	LD_LIBRARY_PATH=$(CURDIR)/debian/tmp/$(PF)/lib dh_shlibdeps
+	dh_fixperms -Pdebian/tmp -pgcc-linaro-4.7
+	dh_installdeb -Pdebian/tmp -pgcc-linaro-4.7
+	dh_gencontrol -Pdebian/tmp -pgcc-linaro-4.7
+	dh_builddeb -Pdebian/tmp -pgcc-linaro-4.7
+	
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install 

@@ -1,0 +1,5 @@
+gcc-linaro-4.7 (4.7.3-linaro2012.10ashitaka1) unstable; urgency=low
+
+  * Import from linaro gcc compiler(gcc-linaro-4.7-2012.10.tar.bz2).
+
+ -- Skerlet Project <skerlet@swc.toshiba.co.jp>  Wed, 14 Nov 2012 12:32:01 +0900
