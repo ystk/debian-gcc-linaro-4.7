@@ -1,3 +1,9 @@
+gcc-linaro-4.7 (4.7.3-linaro2012.10ashitaka2) unstable; urgency=low
+
+  * Modified ruled for 64bit architecture/.
+
+ -- Skerlet Project <skerlet@swc.toshiba.co.jp>  Thu, 29 Nov 2012 10:21:37 +0900
+
 gcc-linaro-4.7 (4.7.3-linaro2012.10ashitaka1) unstable; urgency=low
 
   * Import from linaro gcc compiler(gcc-linaro-4.7-2012.10.tar.bz2).

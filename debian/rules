@@ -10,11 +10,17 @@
 #export DH_VERBOSE=1
 
 # 必要に応じて実行時に設定するパラメータ
+# クロス用に指定するパラメータ
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+DEB_HOST_GNU_TYPE   ?= $(DEB_BUILD_GNU_TYPE)
+DEB_TARGET_GNU_TYPE  ?= $(DEB_HOST_GNU_TYPE)
+DEB_BUILD_ARCH_BITS ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH_BITS)
+
 PF=/opt/gcc-linaro-4.7
 CURDIR=$(PWD)
 gcc_tarball := $(shell find . -maxdepth 1 -name "gcc*.tar.*" | xargs -n1 -i basename {})
 
-unpach: unpack-stamp
+unpack: unpack-stamp
 
 unpack-stamp:
 	case $(gcc_tarball) in \
@@ -32,8 +38,12 @@ config-stamp: unpack-stamp
 	# Add here commands to configure the package.
 	mkdir -p build
 	cd build; ../src/configure \
+			--build=$(DEB_BUILD_GNU_TYPE) \
+			--host=$(DEB_HOST_GNU_TYPE) \
+			--target=$(DEB_TARGET_GNU_TYPE) \
 			--prefix=$(PF) \
-			--exec-prefix=$(PF)
+			--exec-prefix=$(PF) \
+			--disable-multilib
 	touch $@
 
 build: build-stamp
@@ -81,7 +91,11 @@ binary-arch: install-stamp
 	dh_link
 	dh_compress
 	dh_installdebconf
+ifeq ($(DEB_BUILD_ARCH_BITS),64)
+	LD_LIBRARY_PATH=$(CURDIR)/debian/tmp/$(PF)/lib64 dh_shlibdeps
+else
 	LD_LIBRARY_PATH=$(CURDIR)/debian/tmp/$(PF)/lib dh_shlibdeps
+endif
 	dh_fixperms -Pdebian/tmp -pgcc-linaro-4.7
 	dh_installdeb -Pdebian/tmp -pgcc-linaro-4.7
 	dh_gencontrol -Pdebian/tmp -pgcc-linaro-4.7
